@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!-- This is based on DillingerLee's great template here:
+https://github.com/Team-Code/KA_Offline -->
+<html>
+ <head>
+    <title>Dancing robot</title>
+    <style>
+         #mycanvas{
+               position: absolute;
+               top: 40px;
+               left: 60px;
+         }
+         body{
+               background-color: rgb(0,255,89);
+         }
+    </style>
+</head>
+ <body>
+    <p align="center">
+	<!--This draws the Canvas on the webpage -->
+      <canvas id="mycanvas"></canvas>
+    </p>
+ </body>
+
+ <!-- Run all the JavaScript stuff -->
+ <!-- Include the processing.js library -->
+ <!-- See https://khanacademy.zendesk.com/hc/en-us/articles/202260404-What-parts-of-ProcessingJS-does-Khan-Academy-support- for differences -->
+ <script src="https://cdn.jsdelivr.net/processing.js/1.4.8/processing.min.js"></script>
+
+ <script>
+    var sketchProc = function(processingInstance) {
+     with (processingInstance) {
+        size(400, 400);
+        frameRate(30);
+        // ProgramCodeGoesHere
+        angleMode = "Radians";
+        var Pendulum = function(origin, arm){
+           this.origin = origin;
+           this.pos = new PVector();
+           this.angle = random(360);
+           this.armLength = arm;
+           this.aa=  0;
+           this.av= 0;
+           this.dragging = false;
+           this.r = 25;
+        }
+
+        Pendulum.prototype.display = function(){
+
+           strokeWeight(4);
+           this.pos.x = this.origin.x + this.armLength*sin(this.angle);
+           this.pos.y = this.origin.y + this.armLength*cos(this.angle);
+           line(this.origin.x,this.origin.y, this.pos.x,this.pos.y);
+           strokeWeight(1);
+           if(this.dragging){
+             fill(0,0,0);
+           }
+           else{
+             fill(115,211,240);
+           }
+           ellipse(this.pos.x,this.pos.y, this.r,this.r);
+        }
+        Pendulum.prototype.update = function(){
+           var gravity = 0.4;
+           if(!this.dragging){
+             this.aa = (-1*gravity/this.armLength)*sin(this.angle);
+             this.av += this.aa;
+             this.av *= 0.999;
+             this.angle += this.av;
+           }
+         }
+         Pendulum.prototype.handleMouseClick = function(mx,my){
+            var d = PVector.sub(new PVector(mx,my), this.pos);
+            if(d.mag() < this.r){
+               this.dragging = true;
+            }
+         }
+         Pendulum.prototype.handleMouseDrag = function(mx,my){
+            var dir = PVector.sub(this.origin, new PVector(mx,my));
+            if(this.dragging){
+
+               this.angle = atan2(-dir.y, dir.x) - PI/2;
+            }
+         }
+         Pendulum.prototype.stopDragging = function(){
+            this.av = 0;
+            this.dragging = false;
+         }
+         var drawBody = function(){
+               strokeWeight(5);
+               line(150,100,250,100);
+               line(200,100, 200, 220);
+               line(150,220,250,220);
+               strokeWeight(1);
+               fill(115,211,240);
+               ellipse(200, 60, 50,70);
+         }
+         var la1 = new Pendulum(new PVector(150,100), 40);
+         var la2 = new Pendulum(la1.pos, 50);
+         var ra1 = new Pendulum(new PVector(250,100), 40);
+         var ra2 = new Pendulum(ra1.pos, 50);
+         var ll1 =new Pendulum(new PVector(150,220), 60);
+         var ll2 = new Pendulum(ll1.pos, 70);
+         var rl1 = new Pendulum(new PVector(250,220), 60);
+         var rl2 = new Pendulum(rl1.pos,70);
+
+         var limbs = [la2,la1,ra2,ra1,ll2,ll1,rl2,rl1];
+         mousePressed = function(){
+            for(var i = 0; i < limbs.length; ++i){
+               limbs[i].handleMouseClick(mouseX,mouseY);
+            }
+         }
+         mouseDragged = function(){
+
+               for(var i = 0; i < limbs.length; ++i){
+                  limbs[i].handleMouseDrag(mouseX,mouseY);
+               }
+         }
+
+         mouseReleased = function(){
+            for(var i = 0; i < limbs.length; ++i){
+               limbs[i].stopDragging();
+            }
+         }
+        draw = function(){
+           background(255,255,255);
+	   fill(0,0,0);
+	   text("Click and hold to drag any limb!", 20,20);        
+	   drawBody();
+
+             for(var i = 0; i < limbs.length; ++i){
+                limbs[i].update();
+                limbs[i].display();
+             }
+         }
+
+
+
+
+
+
+}};
+
+            // Get the canvas that Processing-js will use
+            var canvas = document.getElementById("mycanvas");
+            // Pass the function sketchProc (defined in myCode.js) to Processing's constructor.
+            var processingInstance = new Processing(canvas, sketchProc);
+         </script>
+
+        </html>
